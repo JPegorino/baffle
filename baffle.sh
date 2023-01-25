@@ -1,5 +1,5 @@
 #!/bin/bash
-## BAFFLE - (B)LAST (A)lignments / (F)asta (F)iles with (L)ess (E)ffort ##
+## BAFFLE - Convert (B)LAST hits to (A)lignments and (F)asta (F)iles with (L)ess (E)ffort ##
 ## A BASH script to quickly and effortlessly BLAST the nucleotide sequence at specific co-ordinates in a reference genome against other genomes and convert the results to a fasta alignment ##
 ## Jamie Gorzynski - 25/01/2023 ##
 
@@ -21,9 +21,7 @@ fi
 echo "checking dependency versions..."
 blastn -version
 makeblastdb -version
-blastdbcmd -version
-bedtools --version
-echo "mafft $(mafft --version)"
+echo "mafft:" && mafft --version
 shopt -s extglob # this option needs to be on for correct file matching
 
  # make the output directory  - the script controls everything that goes in this directory, so it can be used for temporaty files too.
@@ -32,7 +30,7 @@ if [[ -d "${output_directory}" ]]
 else mkdir -v "${output_directory}" && mkdir "${output_directory}/blast_db"
 fi
 
- # make the input multifasta for the blast database
+ # make the input multi-fasta for the blast database
 if [[ -f "${subject}" ]]
   then cp "${subject}" "${output_directory}/baffle_db"
 elif [[ -d "${subject}" ]] && [[ $(compgen -G "${subject}/*.@(fasta|fa|fas|fna|ffn)" | wc -l) -gt 0 ]]
@@ -43,26 +41,26 @@ elif [[ -d "${subject}" ]] && [[ $(compgen -G "${subject}/*.@(fasta|fa|fas|fna|f
   done
 else echo "Subject sequence or sequences not found: exiting..." && exit 1
 fi
- # make the blast database and move it to a specific directory
+
+ # make the blast database and move it to a specific folder in the output directory
 makeblastdb -dbtype nucl -in "${output_directory}/baffle_db" -parse_seqids
 mv "${output_directory}/baffle_db."??? "${output_directory}/blast_db"
 
-  # moved the blastdb to a directory blast_db/
-blastn -db genomes_noST151/blast_db/genomes_noST151.fa -num_threads 8 -task 'blastn' -query "${query}" -query_loc "${query_loc}" -qcov_hsp_perc 20.0 -outfmt 6 -out "${output_directory}/${query}"_coords.tsv
-if [[ ! -f "${output_directory}/${query}"_coords.tsv ]]
+  # run blast and convert the output to a fasta of the aligned regions with the query sequence
+blastn -db genomes_noST151/blast_db/genomes_noST151.fa -num_threads 8 -task 'blastn' -query "${query}" -query_loc "${query_loc}" -qcov_hsp_perc 20.0 -outfmt '6 sseqid sseq' | sed 's/^/>/' | tr '\t' '\n' > "${output_directory}/${subject}_baffle.fasta"
+if [[ ! -f "${output_directory}/${subject}_baffle.fasta" ]]
   then echo 'BLAST failed - exiting...' && exit 1
-else awk -F'\t' '{print $2 "\t" $9-1 "\t" $10}' "${output_directory}/${query}"_coords.tsv > "${output_directory}/${query}"_coords.bed
-  bedtools getfasta -fi "${output_directory}/baffle_db" -bed "${output_directory}/${query}"_coords.bed -fo "${output_directory}/${query}_query.fasta"
-  rm -f "${output_directory}/baffle_db" # the blast-db fasta is no longer needed - remove it!
+else rm -f "${output_directory}/baffle_db" # the blast-db fasta is no longer needed - remove it!
 fi
 
-if [[ ! -f "${output_directory}/${query}_query.fasta" ]]
-  then echo 'Fasta files were not created successfully - exiting...' && exit 1
-else mafft --quiet --maxiterate 1000 --localpair "${output_directory}/${query}_query.fasta" > "${output_directory}/${query}_query.aln"
+if [[ ! -f "${output_directory}/${subject}_baffle.fasta" ]]
+  then echo 'Fasta was not created successfully - exiting...' && exit 1
+else echo 'Performing mafft alignment'
+  mafft --quiet --maxiterate 1000 --localpair "${output_directory}/${subject}_baffle.fasta" > "${output_directory}/${subject}_baffle.aln"
 fi
 
  # print confimration whether the alignment produced output
- if [[ ! -f "${output_directory}/${query}_query.aln" ]]
-   then echo "${query} query alignment was not successful - exiting..." && exit 1
+ if [[ ! -f "${output_directory}/${subject}_baffle.aln" ]]
+   then echo "alignment was not successful - exiting..." && exit 1
  else echo "script finished with no issues detected - exiting..."
  fi
