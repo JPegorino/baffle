@@ -8,6 +8,7 @@ query=$1
 subject=$2
 query_loc=$3
 output_directory=$4
+reverse_complement=$5
 
 # check that input parameters were set.
 if [[ -z "${query}" ]] || [[ -z "${output_directory}" ]]
@@ -47,7 +48,8 @@ makeblastdb -dbtype nucl -in "${output_directory}/baffle_db" -parse_seqids
 mv "${output_directory}/baffle_db."??? "${output_directory}/blast_db"
 
   # run blast and convert the output to a fasta of the aligned regions with the query sequence
-blastn -db genomes_noST151/blast_db/genomes_noST151.fa -num_threads 8 -task 'blastn' -query "${query}" -query_loc "${query_loc}" -qcov_hsp_perc 20.0 -outfmt '6 sseqid sseq' | sed 's/^/>/' | tr '\t' '\n' > "${output_directory}/${subject}_baffle.fasta"
+blastn -db genomes_noST151/blast_db/genomes_noST151.fa -num_threads 8 -task 'blastn' -query "${query}" -query_loc "${query_loc}" -outfmt 6 -out "${output_directory}/${subject}_baffle.coords.tsv" # a record of the unfiltered hits
+blastn -db genomes_noST151/blast_db/genomes_noST151.fa -num_threads 8 -task 'blastn' -query "${query}" -query_loc "${query_loc}" -qcov_hsp_perc 20.0 -max_hsps 1 -outfmt '6 sseqid sseq' | sed 's/^/>/' | tr '\t' '\n' > "${output_directory}/${subject}_baffle.fasta"
 if [[ ! -f "${output_directory}/${subject}_baffle.fasta" ]]
   then echo 'BLAST failed - exiting...' && exit 1
 else rm -f "${output_directory}/baffle_db" # the blast-db fasta is no longer needed - remove it!
@@ -61,6 +63,10 @@ fi
 
  # print confimration whether the alignment produced output
  if [[ ! -f "${output_directory}/${subject}_baffle.aln" ]]
-   then echo "alignment was not successful - exiting..." && exit 1
- else echo "script finished with no issues detected - exiting..."
+   then echo "alignment was not successful - exiting..." && exit
+ else if [[ ! -z "${reverse_complement}" ]] # if the command was given, provide the reverse complement
+     then echo "reverse complement specified: converting..."
+     seqtk seq -r "${output_directory}/${subject}_baffle.aln" > "${output_directory}/${subject}_baffle_rc.aln"
+   fi
+   echo "script finished with no issues detected - exiting..."
  fi
