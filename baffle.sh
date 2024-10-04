@@ -33,26 +33,25 @@ fi
 
  # make the input multi-fasta for the blast database
 if [[ -f "${subject}" ]]
-  then cp "${subject}" "${output_directory}/blast_db"
+  then cp "${subject}" "${output_directory}/blast_db/blast_db"
 elif [[ -d "${subject}" ]] && [[ $(compgen -G "${subject}/*.@(fasta|fa|fas|fna|ffn)" | wc -l) -gt 0 ]]
-  then cat "${subject}"/*.@(fasta|fa|fas|fna|ffn) >> "${output_directory}/blast_db"
+  then cat "${subject}"/*.@(fasta|fa|fas|fna|ffn) >> "${output_directory}/blast_db/blast_db"
 elif [[ -d "${subject}" ]] && [[ $(compgen -G "${subject}/*.@(fasta|fa|fas|fna|ffn)" | wc -l) -gt 0 ]]
   then for fasta in "${subject}"/*.@(fasta|fa|fas|fna|ffn).gz
-    do gunzip -c "${fasta}" >> "${output_directory}/blast_db"
+    do gunzip -c "${fasta}" >> "${output_directory}/blast_db/blast_db"
   done
 else echo "Subject sequence or sequences not found: exiting..." && exit 1
 fi
 
  # make the blast database and move it to a specific folder in the output directory
-makeblastdb -dbtype nucl -in "${output_directory}/blast_db" -parse_seqids
-mv "${output_directory}/blast_db."??? "${output_directory}/blast_db"
+makeblastdb -dbtype nucl -in "${output_directory}/blast_db/blast_db" -parse_seqids
 
   # run blast and convert the output to a fasta of the aligned regions with the query sequence
-blastn -db "${output_directory}/blast_db" -num_threads 8 -task 'blastn' -query "${query}" -query_loc "${query_loc}" -outfmt 6 -out "${output_directory}/${subject}_baffle.coords.tsv" # a record of the unfiltered hits
-blastn -db "${output_directory}/blast_db" -num_threads 8 -task 'blastn' -query "${query}" -query_loc "${query_loc}" -qcov_hsp_perc 20.0 -max_hsps 1 -outfmt '6 sseqid sseq' | sed 's/^/>/' | tr '\t' '\n' > "${output_directory}/${subject}_baffle.fasta"
+blastn -db "${output_directory}/blast_db/blast_db" -num_threads 8 -task 'blastn' -query "${query}" -query_loc "${query_loc}" -outfmt 6 -out "${output_directory}/${subject}_baffle.coords.tsv" # a record of the unfiltered hits
+blastn -db "${output_directory}/blast_db/blast_db" -num_threads 8 -task 'blastn' -query "${query}" -query_loc "${query_loc}" -qcov_hsp_perc 20.0 -max_hsps 1 -outfmt '6 sseqid sseq' | sed 's/^/>/' | tr '\t' '\n' > "${output_directory}/${subject}_baffle.fasta"
 if [[ ! -f "${output_directory}/${subject}_baffle.fasta" ]]
   then echo 'BLAST failed - exiting...' && exit 1
-else rm -f "${output_directory}/blast_db" # the blast-db fasta is no longer needed - remove it!
+else rm -f "${output_directory}/blast_db" # the blast-db is no longer needed - remove it!
 fi
 
 if [[ ! -f "${output_directory}/${subject}_baffle.fasta" ]]
@@ -68,5 +67,6 @@ fi
      then echo "reverse complement specified: converting..."
      seqtk seq -r "${output_directory}/${subject}_baffle.aln" > "${output_directory}/${subject}_baffle_rc.aln"
    fi
+   mv -n 
    echo "script finished with no issues detected - exiting..."
  fi
