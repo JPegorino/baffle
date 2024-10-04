@@ -11,7 +11,7 @@ It produces all output files in the user-specified output directory, which shoul
 It takes four required parameters:
   - Input 1: The first parameter should be the query (reference). It should be a nucleotide file in fasta format.
   - Input 2: The second parameter should be the BLAST subject(s) - i.e. the other sequences to search for the desired region of the query sequence. It should be either a nucleotide file in fasta format or a directory containing multiple nucleotide files in fasta format (.fa, .fas, .fasta, .fna, .ffn or gzipped versions of these are all accepted). The directory may contain other files, which will be ignored. All fasta headers in every file must be entirely unique. 
-  - Input 3: The co-ordinates of the region to BLAST in the query sequence.
+  - Input 3: The co-ordinates of the region to BLAST in the query sequence. These should be two numbers (start and end) separated by a dash character ('-').
   - Input 4: A directory for the output. This directory must not be one that already exists.
 It can also take an optional parameter:
   - Input 5: If any fifth variable is detected, the final alignment will be reverse complemented. This option can take any value at all.
