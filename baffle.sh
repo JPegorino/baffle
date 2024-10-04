@@ -48,8 +48,8 @@ makeblastdb -dbtype nucl -in "${output_directory}/baffle_db" -parse_seqids
 mv "${output_directory}/baffle_db."??? "${output_directory}/blast_db"
 
   # run blast and convert the output to a fasta of the aligned regions with the query sequence
-blastn -db genomes_noST151/blast_db/genomes_noST151.fa -num_threads 8 -task 'blastn' -query "${query}" -query_loc "${query_loc}" -outfmt 6 -out "${output_directory}/${subject}_baffle.coords.tsv" # a record of the unfiltered hits
-blastn -db genomes_noST151/blast_db/genomes_noST151.fa -num_threads 8 -task 'blastn' -query "${query}" -query_loc "${query_loc}" -qcov_hsp_perc 20.0 -max_hsps 1 -outfmt '6 sseqid sseq' | sed 's/^/>/' | tr '\t' '\n' > "${output_directory}/${subject}_baffle.fasta"
+blastn -db "${output_directory}/blast_db" -num_threads 8 -task 'blastn' -query "${query}" -query_loc "${query_loc}" -outfmt 6 -out "${output_directory}/${subject}_baffle.coords.tsv" # a record of the unfiltered hits
+blastn -db "${output_directory}/blast_db" -num_threads 8 -task 'blastn' -query "${query}" -query_loc "${query_loc}" -qcov_hsp_perc 20.0 -max_hsps 1 -outfmt '6 sseqid sseq' | sed 's/^/>/' | tr '\t' '\n' > "${output_directory}/${subject}_baffle.fasta"
 if [[ ! -f "${output_directory}/${subject}_baffle.fasta" ]]
   then echo 'BLAST failed - exiting...' && exit 1
 else rm -f "${output_directory}/baffle_db" # the blast-db fasta is no longer needed - remove it!
