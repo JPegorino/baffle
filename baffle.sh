@@ -123,7 +123,8 @@ elif [[ -d "${subject}" ]] && [[ $(compgen -G "${subject}/*.@(fasta|fa|fas|fna|f
     do gunzip -c "${fasta}" >> "${output_directory}/blast_db/blast_db"
   done
 else echo "Subject sequence or sequences not found: exiting..." && exit 1
-fi
+fi && cp "${query}" >> "${output_directory}/blast_db/blast_db" 
+# if the db is made successfully, add the query sequence to the blast_db so it appears in the alignment
 
  # make the blast database and move it to a specific folder in the output directory
 makeblastdb -dbtype nucl -in "${output_directory}/blast_db/blast_db" -parse_seqids
