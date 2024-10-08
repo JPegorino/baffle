@@ -131,16 +131,15 @@ makeblastdb -dbtype nucl -in "${output_directory}/blast_db/blast_db" -parse_seqi
   # run blast and convert the output to a fasta of the aligned regions with the query sequence
 blastn -db "${output_directory}/blast_db/blast_db" -num_threads "${threads}" -mt_mode 2 -task 'blastn' -query "${query}" -query_loc "${query_loc}" -outfmt 6 -out "${output_directory}/${subject}_baffle.coords.tsv" # a record of the unfiltered hits
 blastn -db "${output_directory}/blast_db/blast_db" -num_threads "${threads}" -mt_mode 2 -task 'blastn' -query "${query}" -query_loc "${query_loc}" -qcov_hsp_perc 20.0 -max_hsps 1 -outfmt '6 sseqid sseq' | sed 's/^/>/' | tr '\t' '\n' > "${output_directory}/${subject}_baffle.fasta"
-
 if [[ ! -f "${output_directory}/${subject}_baffle.fasta" ]]
   then echo 'BLAST failed - exiting...' && exit 1
-else rm -f "${output_directory}/blast_db" # the blast-db is no longer needed - remove it!
+else rm -rf "${output_directory}/blast_db" # the blast-db is no longer needed - remove it!
 fi
-
+ # check that the fasta was generated and if so, create the alignment from the fasta
 if [[ ! -f "${output_directory}/${subject}_baffle.fasta" ]]
   then echo 'Fasta was not created successfully - exiting...' && exit 1
 else echo 'Performing mafft alignment'
-  mafft --quiet --maxiterate 1000 --localpair "${output_directory}/${subject}_baffle.fasta" > "${output_directory}/${subject}_baffle.aln"
+  mafft --thread "${threads}" --quiet --maxiterate 1000 --localpair "${output_directory}/${subject}_baffle.fasta" > "${output_directory}/${subject}_baffle.aln"
 fi
 
  # print confimration whether the alignment produced output
