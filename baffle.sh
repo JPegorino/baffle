@@ -26,11 +26,20 @@ while [ "$1" != "" ]; do
 		-ds | --downstream )		shift
 			downstream_bump=$1
 			;;    
-		-t | --threads )	shift
+		-hsp | --qcov_hsp_perc )		shift
+			qcov_hsp_perc=$1
+			;;
+		-b | --blast-task )		shift
+			blast_task=$1
+			;;
+		-a | --allow_more_gaps )		allow_more_gaps=true
+			;;
+		-x | --exclude_query )		exclude_query_from_alignment=true
+			;;
+    -t | --threads )	shift
 			threads=$1
 			;;
-		-r | --reverse_comp )	shift
-			reverse_complement=$1
+		-r | --reverse_comp )	reverse_complement=true
 			;;
 		-v | --version )           printf "BAFFLE version: 1.0.0"	
       printf "\n------------------------------------------------\n"
@@ -53,13 +62,17 @@ while [ "$1" != "" ]; do
       printf "\n-l | --loci | start and end loci in reference sequence to use for BLAST (in the format start-end). Default: Use entire sequence"
       printf "\n-us | --upstream | sequence length (bp) before the start co-ordinate to include in the BLAST. Default: 0"
       printf "\n-ds | --downstream | sequence length (bp) after the end co-ordinate to include in the BLAST. Default: 0"
-			printf "\n-r | --reverse_comp | flag to reverse complement the output. Default: off"
+      printf "\n-hsp | --qcov_hsp_perc | BLAST -qcov_hsp_perc parameter to filter the alignment. Default: 0.20"
+      printf "\n-a | --allow_more_gaps | If specified, allows more/longer gaps in the alignment by increasing the BLAST -qcov_hsp_perc parameter to 500."
+      printf "\n-x | --exclude_query | If specified, do not include the query sequence in the output alignments. Default: off (include query)"
+      printf "\n-b | --blast-task | BLAST algorithm to use. Must be one of blastn (1), megablast (2), dc-megablast (3), rmblastn (4) or blastn-short (0). Default: 1"
+			printf "\n-r | --reverse_comp | flag to also generate the reverse complement of the alignment in the output - useful if the strand is not known. Default: off"
       printf "\n-v | --version | print version number, check depdencies and exit."
       printf "\n-h | --help | print this help page and exit."      
 			printf "\n\n################################################\n"
 			exit 0
       ;;
-    * )                     printf "\nUse -h | --help"
+    * )                     printf "\nUnrecognised option:\tUse baffle  -h | baffle  --help\n"
     exit 1
   esac
   shift
@@ -90,6 +103,31 @@ fi
 if [ -z "$threads" ]; then
   threads=1
 fi && echo "baffle will run tools using ${threads} threads."
+
+if [ -z "${blast_task}" ] || [ "${blast_task}" == 1 ]; then
+  task="blastn"
+elif [ "${blast_task}" == 0 ]; then
+  task="blastn-short"
+elif [ "${blast_task}" == 2 ]; then
+  task="megablast"
+elif [ "${blast_task}" == 3 ]; then
+  task="dc-megablast"
+elif [ "${blast_task}" == 4 ]; then
+  task="rm-blastn"
+else 
+  task="${blast_task}"
+fi # BLAST analysis will be run using -task "${task} specified here"
+
+if [ -z "$qcov_hsp_perc" ]; then
+  qcov_hsp_perc=20.0
+fi # BLAST results will be filtered using -qcov_hsp_perc 20.0
+
+if [ -n "$allow_more_gaps" ]; then
+  allow_more_gaps=2000
+  gapstatement=" and the score drop-off for gaps increased to ${allow_more_gaps}"
+else
+  allow_more_gaps=30
+fi # BLAST analysis will be run using -xdrop_gap 500
 
 if [ -z "$upstream_bump" ]; then
   upstream_bump=0
@@ -140,8 +178,12 @@ if [[ -d "${output_directory}" ]]
 else mkdir -v "${output_directory}" && mkdir "${output_directory}/blast_db"
 fi
 
+# unless otherwise specified, add the query sequence to the blast_db so it appears in the alignment
+if [[ -z "${exclude_query_from_alignment}" ]]; then
+cat "${query}" > "${output_directory}/blast_db/blast_db"
+fi 
+
  # make the input multi-fasta for the blast database
-cat "${query}" > "${output_directory}/blast_db/blast_db" # add the query sequence to the blast_db so it appears in the alignment
 if [[ -f "${subject}" ]]
   then cat "${subject}" >> "${output_directory}/blast_db/blast_db"
 elif [[ -d "${subject}" ]] && [[ $(compgen -G "${subject}/*.@(fasta|fa|fas|fna|ffn)" | wc -l) -gt 0 ]]
@@ -157,12 +199,12 @@ fi && subject=$(basename "${subject}") # remove file path from subject variable 
 makeblastdb -dbtype nucl -in "${output_directory}/blast_db/blast_db" -parse_seqids
 
   # run blast and convert the output to a fasta of the aligned regions with the query sequence
-echo running BLAST for ${query} loci ${query_loc} with ${PWD} coverage cutoff.
-echo -e "QUERY\tSUBJECT\tPERC_IDENTITY\tALIGNED_LENGTH\tNUM_MISMATCHES\tNUM_GAP_OPENS\tQUERY_START\tQUERY_END\tSUBJECT_START\tSUBJECT_END\tE-VALUE\tBIT_SCORE"
-blastn -db "${output_directory}/blast_db/blast_db" -num_threads "${threads}" -mt_mode 2 -task 'blastn' -query "${query}" -query_loc "${query_loc}" -outfmt 6 -out "${output_directory}/${subject}_baffle.coords.tsv.tmp" # a record of the unfiltered hits
-echo -e "QUERY\tSUBJECT\tPERC_IDENTITY\tALIGNED_LENGTH\tNUM_MISMATCHES\tNUM_GAP_OPENS\tQUERY_START\tQUERY_END\tSUBJECT_START\tSUBJECT_END\tE-VALUE\tBIT_SCORE" > "${output_directory}/${subject}_baffle.coords.tsv"
+out_columns="qaccver saccver pident length qlen slen gaps gapopen mismatch qstart qend sstart send evalue bitscore ppos qcovhsp qcovs"
+echo Running ${task} BLAST for ${query} loci ${query_loc} with ${qcov_hsp_perc} coverage cutoff${gapstatement}.
+blastn -db "${output_directory}/blast_db/blast_db" -num_threads "${threads}" -mt_mode 2 -task "${task}" -query "${query}" -query_loc "${query_loc}" -outfmt "6 ${out_columns}" -xdrop_gap "${allow_more_gaps}" -out "${output_directory}/${subject}_baffle.coords.tsv.tmp" # a record of the unfiltered hits
+echo -e "QUERY\tSUBJECT\tPERC_IDENTITY\tMATCH_LENGTH\tQUERY_LENGTH\tSUBJECT_LENGTH\tNUM_GAP_BASES\tNUM_GAPS\tNUM_MISMATCHES\tQUERY_START\tQUERY_END\tSUBJECT_START\tSUBJECT_END\tE-VALUE\tBIT_SCORE\tPERC_POSITIVES\tQUERY_COVERAGE_PER_MATCH\tQUERY_COVERAGE_PER_SUBJECT" > "${output_directory}/${subject}_baffle.coords.tsv"
 cat "${output_directory}/${subject}_baffle.coords.tsv.tmp" >> "${output_directory}/${subject}_baffle.coords.tsv" && rm "${output_directory}/${subject}_baffle.coords.tsv.tmp"
-blastn -db "${output_directory}/blast_db/blast_db" -num_threads "${threads}" -mt_mode 2 -task 'blastn' -query "${query}" -query_loc "${query_loc}" -qcov_hsp_perc 20.0 -max_hsps 1 -outfmt '6 sseqid sseq' | sed 's/^/>/' | tr '\t' '\n' > "${output_directory}/${subject}_baffle.fasta"
+blastn -db "${output_directory}/blast_db/blast_db" -num_threads "${threads}" -mt_mode 2 -task "${task}" -query "${query}" -query_loc "${query_loc}" -xdrop_gap "${allow_more_gaps}" -qcov_hsp_perc "${qcov_hsp_perc}" -max_hsps 1 -outfmt '6 sseqid sseq' | sed 's/^/>/' | tr '\t' '\n' > "${output_directory}/${subject}_baffle.fasta"
 if [[ ! -f "${output_directory}/${subject}_baffle.fasta" ]]
   then echo 'BLAST failed - exiting...' && exit 1
 else rm -rf "${output_directory}/blast_db" # the blast-db is no longer needed - remove it!
@@ -171,14 +213,14 @@ fi
  # check that the fasta was generated and if so, create the alignment from the fasta
 if [[ ! -f "${output_directory}/${subject}_baffle.fasta" ]]
   then echo 'Fasta was not created successfully - exiting...' && exit 1
-else echo 'Performing mafft alignment'
+else echo 'Performing mafft alignment.'
   mafft --thread "${threads}" --quiet --maxiterate 1000 --localpair "${output_directory}/${subject}_baffle.fasta" > "${output_directory}/${subject}_baffle.aln"
 fi
 
  # print confimration whether the alignment produced output
  if [[ ! -f "${output_directory}/${subject}_baffle.aln" ]]
    then echo "alignment was not successful - exiting..." && exit
- else if [[ ! -z "${reverse_complement}" ]] # if the command was given, provide the reverse complement
+ else if [[ -n "${reverse_complement}" ]] # if the command was given, provide the reverse complement
      then echo "reverse complement specified: converting..."
      seqtk seq -r "${output_directory}/${subject}_baffle.aln" > "${output_directory}/${subject}_baffle_rc.aln"
    fi
