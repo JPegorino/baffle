@@ -153,6 +153,13 @@ elif [ $(echo ${query_loc} | fold -w1 | grep -vc "[0-9-]") -gt 0 ] ; then
   exit 1
 fi
 
+# if loci not in numerical order, assume '-' strand
+if [ ${query_loc#*-} -gt ${query_loc%-*} ] ; then
+  query_loc="${query_loc%-*}-${query_loc#*-}"
+  reverse_complement=true
+  echo "Negative strand detected. Baffle will use ${query_loc} and reverse complement."
+fi
+
 # add upstream and downstream bumps to the query loci
 query_start=$(( ${query_loc%-*} - ${upstream_bump} ))
 query_end=$(( ${query_loc#*-} + ${downstream_bump} ))
