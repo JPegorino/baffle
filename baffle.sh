@@ -155,9 +155,10 @@ fi
 
 # if loci not in numerical order, assume '-' strand
 if [ ${query_loc#*-} -gt ${query_loc%-*} ] ; then
-  query_loc="${query_loc%-*}-${query_loc#*-}"
+  query_loc="${query_loc#*-}-${query_loc%-*}"
   reverse_complement=true
   echo "Negative strand detected. Baffle will use ${query_loc} and reverse complement."
+  echo "Check that upsteam and downstream bumps are correctly oriented."
 fi
 
 # add upstream and downstream bumps to the query loci
