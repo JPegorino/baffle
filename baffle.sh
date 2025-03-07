@@ -147,7 +147,7 @@ fi
 query_loc=$(echo ${query_loc} | sed 's/[,;/:]/-/g')
 if [ -z "$query_loc" ] ; then
   query_len=$(seqkit stat "${query}" | awk '{ print $NF }' | tail -1 | tr -d ',')
-  query_loc="0-${query_len}"
+  query_loc="1-${query_len}"
 elif [ $(echo ${query_loc} | fold -w1 | grep -vc "[0-9-]") -gt 0 ] ; then
   echo "ERROR: ${query_loc} - query loci string may only contain numeric and delimiter characters. Accepted delimiters are : ; , - / characters."
   exit 1
