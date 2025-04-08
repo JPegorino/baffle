@@ -195,7 +195,12 @@ fi
 if [[ -f "${subject}" ]]
   then cat "${subject}" >> "${output_directory}/blast_db/blast_db"
 elif [[ -d "${subject}" ]] && [[ $(compgen -G "${subject}/*.@(fasta|fa|fas|fna|ffn)" | wc -l) -gt 0 ]]
-  then cat "${subject}"/*.@(fasta|fa|fas|fna|ffn) >> "${output_directory}/blast_db/blast_db"
+  then if [[ $(compgen -G "${subject}/*.@(fasta|fa|fas|fna|ffn)" | wc -l) -gt $(getconf ARG_MAX) ]]
+    then cat "${subject}"/*.@(fasta|fa|fas|fna|ffn) >> "${output_directory}/blast_db/blast_db"
+    else for fasta in "${subject}"/*.@(fasta|fa|fas|fna|ffn)
+      do cat "${fasta}" >> "${output_directory}/blast_db/blast_db"
+    done
+  fi
 elif [[ -d "${subject}" ]] && [[ $(compgen -G "${subject}/*.@(fasta|fa|fas|fna|ffn).gz" | wc -l) -gt 0 ]]
   then for fasta in "${subject}"/*.@(fasta|fa|fas|fna|ffn).gz
     do gunzip -c "${fasta}" >> "${output_directory}/blast_db/blast_db"
