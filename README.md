@@ -11,62 +11,62 @@ It produces all output files in the user-specified output directory, which shoul
 
 ## Usage / Parameters:
 It can take the following parameters:
-  
-  ### Required:
-```md
 
-    ```-q | --query`
-    BLAST query (reference) - must be a nucleotide file in FASTA format.
-    
-    `-s | --subject`
-     BLAST subject. path to directory containing one or more subject seuqences (e.g. genome assemblies) for the BLAST database.
-```
-  
-  ### Optional (general):
-```
+### Required:
+** `-q | --query` BLAST query (reference).**
+Must be a nucleotide file in FASTA format.
 
-    `-o | --output_dir`
-    output directory name - a directory where new files can be created to avoid overwriting originals. Default: 'baffle_' appended with a unique numberic identifier.
-    
-    `-l | --loci`
-    Start and end loci in the query to use for BLAST (in the format start-end). Default: Use entire sequence.
-    
-    -t | --threads`
-    Number of threads to use. Default: 1
+**`-s | --subject` BLAST subject.**
+Path to directory containing one or more subject seuqences (e.g. genome assemblies) for the BLAST database.
 
-    `-us | --upstream`
-    Sequence length (bp) before the start co-ordinate to include in the BLAST. Default: 0
+### Optional (Helper):
 
-    `-ds | --downstream`
-    Sequence length (bp) after the end co-ordinate to include in the BLAST. Default: 0
-    
-    `-x | --exclude_query`
-    If specified, do not include the query sequence in the output alignments. Default: off (include query)
+**`-v | --version` Version.**
+Print the version number, check depdencies and exit.
 
-    `-r | --reverse_comp`
-    include the reverse complement of the alignment in the output - useful if the strand is not known. Default: off
-```
+**`-h | --help` Help.**
+Print the help page and exit.
 
-  ### Optional (BLAST):
-```md
+### Optional (general):
 
-    `-b | --blast-task`
-    BLAST algorithm to use. Can be a string or a single corresponding digit. Must be one of blastn (1), megablast (2), dc-megablast (3), rmblastn (4) or blastn-short (0). Default: 1
+**`-o | --output_dir` Output directory name.**
+A directory where new files can be created to avoid overwriting originals. Default: 'baffle_' appended with a unique numeric identifier.
 
-    `-hsp | --qcov_hsp_perc`
-    BLAST `-qcov_hsp_perc` parameter to filter the alignment (see `blastn --help`). Default: 0.20
+**`-t | --threads` Number of threads to use.**
+Default: 1
 
-    `-a | --allow_more_gaps`
-    If specified, allows more/longer gaps in the alignment by increasing the BLAST -qcov_hsp_perc parameter to 500.
-```
+**`-us | --upstream` Upstream bump.**
+Sequence length (bp) before the start co-ordinate to include in the BLAST.
+Default: 0
 
-  ### Helper:
-```md
+**`-ds | --downstream` Downstream bump.**
+Sequence length (bp) after the end co-ordinate to include in the BLAST.
+Default: 0
 
-    -v | --version
-    print the version number, check depdencies and exit.
-    
+**`-x | --exclude_query` Query output.**
+If specified, do not include the query sequence in the output alignments.
+Default: off (include query)
 
-    `-h | --help`
-    print the help page and exit.
-```
+**`-r | --reverse_comp` Reverse complement.**
+If specified, include the reverse complement of the alignment in the output.
+Useful if the strand is not known.
+Default: off
+
+### Optional (BLAST):
+
+**`-b | --blast-task` BLAST task.**
+BLAST algorithm to use. Can be a string or a single corresponding digit.
+Must be one of blastn (1), megablast (2), dc-megablast (3), rmblastn (4) or blastn-short (0).
+Default: 1
+
+**`-l | --loci` BLAST query_loc.**
+Extract sequence between these loci for the BLAST query (in the format start-end).
+Default: Use entire sequence.
+
+**`-hsp | --qcov_hsp_perc` BLAST qcov_hsp_perc.**
+BLAST `-qcov_hsp_perc` parameter to filter the alignment (see `blastn --help`).
+Default: 0.20
+
+**`-a | --allow_more_gaps` BLAST xdrop_gap.**
+If specified, allows more/longer gaps in the alignment by increasing the BLAST -xdrop_gap parameter to 500.
+Default: off

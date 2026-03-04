@@ -63,7 +63,7 @@ while [ "$1" != "" ]; do
       printf "\n-us | --upstream | sequence length (bp) before the start co-ordinate to include in the BLAST. Default: 0"
       printf "\n-ds | --downstream | sequence length (bp) after the end co-ordinate to include in the BLAST. Default: 0"
       printf "\n-hsp | --qcov_hsp_perc | BLAST -qcov_hsp_perc parameter to filter the alignment. Default: 0.20"
-      printf "\n-a | --allow_more_gaps | If specified, allows more/longer gaps in the alignment by increasing the BLAST -qcov_hsp_perc parameter to 500."
+      printf "\n-a | --allow_more_gaps | If specified, allows more/longer gaps in the alignment by increasing the BLAST -xdrop_gap parameter to 500."
       printf "\n-x | --exclude_query | If specified, do not include the query sequence in the output alignments. Default: off (include query)"
       printf "\n-b | --blast-task | BLAST algorithm to use. Must be one of blastn (1), megablast (2), dc-megablast (3), rmblastn (4) or blastn-short (0). Default: 1"
 			printf "\n-r | --reverse_comp | flag to also generate the reverse complement of the alignment in the output - useful if the strand is not known. Default: off"
