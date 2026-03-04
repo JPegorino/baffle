@@ -21,6 +21,7 @@ Must be a nucleotide file in FASTA format.
 Path to directory containing one or more subject seuqences (e.g. genome assemblies) for the BLAST database.
   
 
+
 #### Optional (Helper):
 
 **`-v | --version`**  
@@ -29,6 +30,7 @@ Print the version number, check depdencies and exit.
 **`-h | --help`**  
 Print the help page and exit.
   
+
 
 #### Optional (general):
 
@@ -58,6 +60,7 @@ If specified, include the reverse complement of the alignment in the output.
 Useful if the strand is not known.  
 Default: off
   
+
 
 #### Optional (BLAST):
 
