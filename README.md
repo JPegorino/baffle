@@ -13,14 +13,18 @@ It produces all output files in the user-specified output directory, which shoul
 It can take the following parameters:
   
   ### Required:
+```md
 
     ```-q | --query`
     BLAST query (reference) - must be a nucleotide file in FASTA format.
     
     `-s | --subject`
      BLAST subject. path to directory containing one or more subject seuqences (e.g. genome assemblies) for the BLAST database.
+```
   
   ### Optional (general):
+```
+
     `-o | --output_dir`
     output directory name - a directory where new files can be created to avoid overwriting originals. Default: 'baffle_' appended with a unique numberic identifier.
     
@@ -41,8 +45,11 @@ It can take the following parameters:
 
     `-r | --reverse_comp`
     include the reverse complement of the alignment in the output - useful if the strand is not known. Default: off
+```
 
   ### Optional (BLAST):
+```md
+
     `-b | --blast-task`
     BLAST algorithm to use. Can be a string or a single corresponding digit. Must be one of blastn (1), megablast (2), dc-megablast (3), rmblastn (4) or blastn-short (0). Default: 1
 
@@ -51,15 +58,14 @@ It can take the following parameters:
 
     `-a | --allow_more_gaps`
     If specified, allows more/longer gaps in the alignment by increasing the BLAST -qcov_hsp_perc parameter to 500.
+```
 
   ### Helper:
 ```md
 
     -v | --version
-```
     print the version number, check depdencies and exit.
     
-```md
 
     `-h | --help`
     print the help page and exit.
