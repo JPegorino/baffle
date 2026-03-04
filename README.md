@@ -1,6 +1,6 @@
 # BAFFLE
 Convert (B)LAST hits to (A)lignments and (F)asta (F)iles with (L)ess (E)ffort
-### Jamie Gorzynski - 25/01/2023 ##
+##### Jamie Gorzynski - 25/01/2023 ##
 
 ## What is BAFFLE?
 Baffle is a convenience BASH script designed to quickly and effortlessly BLAST the nucleotide sequence in a FASTA file or at specific (nucleotide) co-ordinates in a reference against other nucleotide fasta sequences, then create a multi-FASTA alignment of the hits.
