@@ -10,68 +10,71 @@ Under the surface, it uses `blastn` (to perform BLAST), `mafft` (to perform the 
 It produces all output files in the user-specified output directory, which should be a directory that does not already exist.
 
 ## Usage / Parameters:
-It can take the following parameters:
+Baffle accepts the following parameters:
 
-##### Required:
+#### Required:
 
 **`-q | --query` BLAST query (reference).**  
 Must be a nucleotide file in FASTA format.
 
 **`-s | --subject` BLAST subject.**  
 Path to directory containing one or more subject seuqences (e.g. genome assemblies) for the BLAST database.
+  
 
-##### Optional (Helper):
+#### Optional (Helper):
 
 **`-v | --version`**  
 Print the version number, check depdencies and exit.
 
 **`-h | --help`**  
 Print the help page and exit.
+  
 
-##### Optional (general):
+#### Optional (general):
 
 **`-o | --output_dir`**  
-Output directory name.
-A directory where new files can be created to avoid overwriting originals.
+Output directory name.  
+A directory where new files can be created to avoid overwriting originals.  
 Default: 'baffle_' appended with a unique numeric identifier.
 
 **`-t | --threads`**  
-Number of threads to use.
+Number of threads to use.  
 Default: 1
 
 **`-us | --upstream`**  
-Sequence length (bp) before the start co-ordinate to include in the BLAST.
+Sequence length (bp) before the start co-ordinate to include in the BLAST.  
 Default: 0
 
 **`-ds | --downstream`**  
-Sequence length (bp) after the end co-ordinate to include in the BLAST.
+Sequence length (bp) after the end co-ordinate to include in the BLAST.  
 Default: 0
 
 **`-x | --exclude_query`**  
-If specified, do not include the query sequence in the output alignments.
+If specified, do not include the query sequence in the output alignments.  
 Default: off (include query)
 
 **`-r | --reverse_comp`**  
-If specified, include the reverse complement of the alignment in the output.
-Useful if the strand is not known.
+If specified, include the reverse complement of the alignment in the output.  
+Useful if the strand is not known.  
 Default: off
+  
 
-##### Optional (BLAST):
+#### Optional (BLAST):
 
 **`-b | --blast-task`**  
-BLAST algorithm to use. Can be a string or a single corresponding digit.
-Must be one of blastn (1), megablast (2), dc-megablast (3), rmblastn (4) or blastn-short (0).
+BLAST algorithm to use. Can be a string or a single corresponding digit.  
+Must be one of blastn (1), megablast (2), dc-megablast (3), rmblastn (4) or blastn-short (0).  
 Default: 1
 
 **`-l | --loci`**  
-BLAST `-query_loc` parameter to extract sequence between two loci for the BLAST query.
-Use the format '#-#' ('start #,end #').
+BLAST `-query_loc` parameter to extract sequence between two loci for the BLAST query.  
+Use the format '#-#' ('start #,end #').  
 Default: Use entire sequence.
 
 **`-hsp | -qcov_hsp_perc`.**  
-BLAST `-qcov_hsp_perc` parameter to filter the alignment (see `blastn --help`).
+BLAST `-qcov_hsp_perc` parameter to filter the alignment (see `blastn --help`).  
 Default: 0.20
 
 **`-a | --allow_more_gaps`**  
-If specified, allows more/longer gaps in the alignment by increasing the BLAST -xdrop_gap parameter to 500.
+If specified, allows more/longer gaps in the alignment by increasing the BLAST -xdrop_gap parameter to 500.  
 Default: off (BLAST -xdrop_gap=20)
