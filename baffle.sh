@@ -212,12 +212,13 @@ fi && subject=$(basename "${subject}") # remove file path from subject variable 
 makeblastdb -dbtype nucl -in "${output_directory}/blast_db/blast_db" -parse_seqids
 
   # run blast and convert the output to a fasta of the aligned regions with the query sequence
-out_columns="qaccver saccver pident length qlen slen gaps gapopen mismatch qstart qend sstart send evalue bitscore ppos qcovhsp qcovs"
+out_columns="qaccver saccver pident length qlen slen gaps gapopen mismatch qstart qend sstart send sstrand evalue bitscore ppos qcovhsp qcovs"
 echo Running ${task} BLAST for ${query} loci ${query_loc} with ${qcov_hsp_perc} coverage cutoff${gapstatement}.
 blastn -db "${output_directory}/blast_db/blast_db" -num_threads "${threads}" -mt_mode 2 -task "${task}" -query "${query}" -query_loc "${query_loc}" -outfmt "6 ${out_columns}" -xdrop_gap "${allow_more_gaps}" -out "${output_directory}/${subject}_baffle.coords.tsv.tmp" # a record of the unfiltered hits
-echo -e "QUERY\tSUBJECT\tPERC_IDENTITY\tMATCH_LENGTH\tQUERY_LENGTH\tSUBJECT_LENGTH\tNUM_GAP_BASES\tNUM_GAPS\tNUM_MISMATCHES\tQUERY_START\tQUERY_END\tSUBJECT_START\tSUBJECT_END\tE-VALUE\tBIT_SCORE\tPERC_POSITIVES\tQUERY_COVERAGE_PER_MATCH\tQUERY_COVERAGE_PER_SUBJECT" > "${output_directory}/${subject}_baffle.coords.tsv"
+echo -e "QUERY\tSUBJECT\tPERC_IDENTITY\tMATCH_LENGTH\tQUERY_LENGTH\tSUBJECT_LENGTH\tNUM_GAP_BASES\tNUM_GAPS\tNUM_MISMATCHES\tQUERY_START\tQUERY_END\tSUBJECT_START\tSUBJECT_END\tSUBJECT_STRAND\tE-VALUE\tBIT_SCORE\tPERC_POSITIVES\tQUERY_COVERAGE_PER_MATCH\tQUERY_COVERAGE_PER_SUBJECT" > "${output_directory}/${subject}_baffle.coords.tsv"
 cat "${output_directory}/${subject}_baffle.coords.tsv.tmp" >> "${output_directory}/${subject}_baffle.coords.tsv" && rm "${output_directory}/${subject}_baffle.coords.tsv.tmp"
 blastn -db "${output_directory}/blast_db/blast_db" -num_threads "${threads}" -mt_mode 2 -task "${task}" -query "${query}" -query_loc "${query_loc}" -xdrop_gap "${allow_more_gaps}" -qcov_hsp_perc "${qcov_hsp_perc}" -max_hsps 1 -outfmt '6 sseqid sseq' | sed 's/^/>/' | tr '\t' '\n' > "${output_directory}/${subject}_baffle.fasta"
+strand=$(cut -f14 "${output_directory}/${subject}_baffle.coords.tsv" | tail -n +2 | head -1)
 if [[ ! -f "${output_directory}/${subject}_baffle.fasta" ]]
   then echo 'BLAST failed - exiting...' && exit 1
 else rm -rf "${output_directory}/blast_db" # the blast-db is no longer needed - remove it!
@@ -233,8 +234,9 @@ fi
  # print confimration whether the alignment produced output
  if [[ ! -f "${output_directory}/${subject}_baffle.aln" ]]
    then echo "alignment was not successful - exiting..." && exit
- else if [[ -n "${reverse_complement}" ]] # if the command was given, provide the reverse complement
-     then echo "reverse complement specified: converting..."
+ else 
+    if [[ "${reverse_complement}" == 'minus' ]] # if the first hit in the table is on the -ve strand, reverse complement
+     then echo "reverse complement detected: converting..."
      seqtk seq -r "${output_directory}/${subject}_baffle.aln" > "${output_directory}/${subject}_baffle_rc.aln"
    fi
    echo -e "Output created:\n $(ls ${output_directory})"
