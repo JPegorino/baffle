@@ -7,7 +7,8 @@ Baffle is a convenience BASH script designed to quickly and effortlessly BLAST t
 
 ## Dependencies:
 Under the surface, it uses `blastn` (to perform BLAST), `mafft` (to perform the alignment) and `seqtk` to construct the reverse complement if requested. 
-It produces all output files in the user-specified output directory, which should be a directory that does not already exist.
+It produces all output files in the user-specified output directory, which should be a directory that does not already exist.  
+All dependencies can be installed via conda from the YAML file in the 'depends' subdirectory.
 
 ## Usage / Parameters:
 Baffle accepts the following parameters:
