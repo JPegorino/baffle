@@ -39,8 +39,6 @@ while [ "$1" != "" ]; do
     -t | --threads )	shift
 			threads=$1
 			;;
-		-r | --reverse_comp )	reverse_complement=true
-			;;
 		-v | --version )           printf "BAFFLE version: 1.0.0"	
       printf "\n------------------------------------------------\n"
       printf "checking dependencies...\n"
@@ -66,7 +64,6 @@ while [ "$1" != "" ]; do
       printf "\n-a | --allow_more_gaps | If specified, allows more/longer gaps in the alignment by increasing the BLAST -xdrop_gap parameter to 500."
       printf "\n-x | --exclude_query | If specified, do not include the query sequence in the output alignments. Default: off (include query)"
       printf "\n-b | --blast-task | BLAST algorithm to use. Must be one of blastn (1), megablast (2), dc-megablast (3), rmblastn (4) or blastn-short (0). Default: 1"
-			printf "\n-r | --reverse_comp | flag to also generate the reverse complement of the alignment in the output - useful if the strand is not known. Default: off"
       printf "\n-v | --version | print version number, check depdencies and exit."
       printf "\n-h | --help | print this help page and exit."      
 			printf "\n\n################################################\n"
@@ -153,23 +150,16 @@ elif [ $(echo ${query_loc} | fold -w1 | grep -vc "[0-9-]") -gt 0 ] ; then
   exit 1
 fi
 
-# if loci not in numerical order, assume '-' strand
+# if loci not in numerical order, reverse the values
 if [ ${query_loc#*-} -lt ${query_loc%-*} ] ; then
+  echo "Loci must be in the format Lowest-Highest. Reversing ${query_loc} values..."
   query_loc="${query_loc#*-}-${query_loc%-*}"
-  reverse_complement=true
-  echo "Negative strand detected. Baffle will use ${query_loc} and reverse complement."
-  echo "Check that upsteam and downstream bumps are correctly oriented."
 fi
 
 # add upstream and downstream bumps to the query loci
 query_start=$(( ${query_loc%-*} - ${upstream_bump} ))
 query_end=$(( ${query_loc#*-} + ${downstream_bump} ))
 query_loc="${query_start}-${query_end}"
-
-## SPARE ##
-#if [ -z "$reverse_complement" ]; then
-#  reverse_complement=""
-#fi
 
  # assert that tools are present and display versions in output
 echo "checking dependencies are present..."
@@ -218,7 +208,7 @@ blastn -db "${output_directory}/blast_db/blast_db" -num_threads "${threads}" -mt
 echo -e "QUERY\tSUBJECT\tPERC_IDENTITY\tMATCH_LENGTH\tQUERY_LENGTH\tSUBJECT_LENGTH\tNUM_GAP_BASES\tNUM_GAPS\tNUM_MISMATCHES\tQUERY_START\tQUERY_END\tSUBJECT_START\tSUBJECT_END\tSUBJECT_STRAND\tE-VALUE\tBIT_SCORE\tPERC_POSITIVES\tQUERY_COVERAGE_PER_MATCH\tQUERY_COVERAGE_PER_SUBJECT" > "${output_directory}/${subject}_baffle.coords.tsv"
 cat "${output_directory}/${subject}_baffle.coords.tsv.tmp" >> "${output_directory}/${subject}_baffle.coords.tsv" && rm "${output_directory}/${subject}_baffle.coords.tsv.tmp"
 blastn -db "${output_directory}/blast_db/blast_db" -num_threads "${threads}" -mt_mode 2 -task "${task}" -query "${query}" -query_loc "${query_loc}" -xdrop_gap "${allow_more_gaps}" -qcov_hsp_perc "${qcov_hsp_perc}" -max_hsps 1 -outfmt '6 sseqid sseq' | sed 's/^/>/' | tr '\t' '\n' > "${output_directory}/${subject}_baffle.fasta"
-strand=$(cut -f14 "${output_directory}/${subject}_baffle.coords.tsv" | tail -n +2 | head -1)
+detected_strand=$(blastn -db "${output_directory}/blast_db/blast_db" -num_threads "${threads}" -mt_mode 2 -task "${task}" -query "${query}" -query_loc "${query_loc}" -xdrop_gap "${allow_more_gaps}" -qcov_hsp_perc "${qcov_hsp_perc}" -max_hsps 1 -outfmt '6 sstrand') # determines the strand of the above best match
 if [[ ! -f "${output_directory}/${subject}_baffle.fasta" ]]
   then echo 'BLAST failed - exiting...' && exit 1
 else rm -rf "${output_directory}/blast_db" # the blast-db is no longer needed - remove it!
@@ -235,7 +225,7 @@ fi
  if [[ ! -f "${output_directory}/${subject}_baffle.aln" ]]
    then echo "alignment was not successful - exiting..." && exit
  else 
-    if [[ "${reverse_complement}" == 'minus' ]] # if the first hit in the table is on the -ve strand, reverse complement
+    if [[ "${detected_strand}" == 'minus' ]] # if the first hit in the table is on the -ve strand, reverse complement
      then echo "reverse complement detected: converting..."
      seqtk seq -r "${output_directory}/${subject}_baffle.aln" > "${output_directory}/${subject}_baffle_rc.aln"
    fi
