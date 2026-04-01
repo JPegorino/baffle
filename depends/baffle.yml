@@ -6,7 +6,9 @@ dependencies:
   - exonerate=2.4.0
   - python=3.14.3
   - python_abi=3.14
+  - macse=2.07
   - blast
   - mafft
   - seqkit
   - seqtk
+  - last
